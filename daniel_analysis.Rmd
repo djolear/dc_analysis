@@ -1,0 +1,291 @@
+---
+title: "Admissions Analysis"
+author: "Daniel O'Leary"
+date: "4/17/2020"
+output: 
+  github_document:
+    toc: true
+---
+
+# Setup
+
+## Load Packages
+```{r setup, include=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, haven, broom, lavaan, mediation, lm.beta)
+```
+
+
+## Load Data
+
+```{r load data, warning = FALSE}
+eth <- 
+  read_csv("C:/Users/Daniel/OneDrive - Leland Stanford Junior University/dc/applicant_analysis/applicant_analysis/results/eth_summaries.csv") 
+
+gender <- 
+  read_csv("C:/Users/Daniel/OneDrive - Leland Stanford Junior University/dc/applicant_analysis/applicant_analysis/results/gender.csv") 
+
+n_applicants <- 
+  read_csv("C:/Users/Daniel/OneDrive - Leland Stanford Junior University/dc/applicant_analysis/applicant_analysis/results/n_applicants.csv") 
+
+eth <-
+  eth %>% 
+  mutate(eth = X1) %>% 
+  dplyr::select(-X1)
+
+gender <-
+  gender %>% 
+  mutate(area = X1) %>% 
+  dplyr::select(-X1)
+
+n_applicants <-
+  n_applicants %>% 
+  mutate(area = X1) %>% 
+  dplyr::select(-X1)
+```
+
+# Analysis
+
+## Total number of apps by area
+
+## Version 1
+
+```{r}
+eth %>% 
+  gather(area, value, Affective:Social) %>% 
+  count(area, season, wt = value) %>% 
+  mutate(
+    total_apps = n
+  ) %>% 
+  dplyr::select(-c(n)) %>% 
+  arrange(season)
+```
+
+## Version 2
+
+```{r}
+n_applicants %>% 
+  gather(season, total_apps, `2017-18`:`2019-20`)
+```
+
+
+## Ethnicity
+
+### Count
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, key, wt = value) %>% 
+  ggplot(aes(fct_reorder(eth, n), n)) +
+  geom_col() +
+  facet_grid(. ~ key) + 
+  coord_flip() +
+  labs(
+    x = "ethnicity",
+    y = "count"
+  )
+```
+
+
+### Percentage w/ version 1 counts
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  filter(eth != "White") %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.05)
+  ) +
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+```
+
+### Percentage w/ version 2 counts
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, key, wt = value) %>% 
+  left_join(
+    n_applicants %>% 
+      gather(season, total_apps, `2017-18`:`2019-20`) %>% 
+      count(area, wt = total_apps) %>% 
+      mutate(
+        key = area,
+        total_apps = n
+      ) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, key, wt = value) %>% 
+   left_join(
+    n_applicants %>% 
+      gather(season, total_apps, `2017-18`:`2019-20`) %>% 
+      count(area, wt = total_apps) %>% 
+      mutate(
+        key = area,
+        total_apps = n
+      ) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  filter(eth != "White") %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.05)
+  ) +
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+```
+
+### Percentage by year
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, season, key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, season, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = c("key", "season")
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  facet_grid(season ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth, season, key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, season, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = c("key", "season")
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  filter(eth != "White") %>% 
+  ggplot(aes(fct_reorder(eth, per), per)) +
+  geom_col() +
+  facet_grid(season ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+```
+
+
+## Gender
+
+```{r}
+gender %>% 
+  gather(key, value, `2017-18`:`2019-20`) %>% 
+  group_by(area) %>% 
+  summarise(
+    per = mean(value, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(fct_reorder(area, per), per)) +
+  geom_col() + 
+  coord_flip() +
+  labs(
+    x = "area",
+    y = "percent female"
+  )
+
+gender %>% 
+  gather(key, value, `2017-18`:`2019-20`) %>% 
+  ggplot(aes(fct_reorder(area, value), value)) +
+  geom_col() + 
+  facet_grid(. ~ key) +
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percent female"
+  )
+```
+
