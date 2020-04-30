@@ -17,6 +17,12 @@ Daniel O’Leary
           - [Percentage w/ version 2
             counts](#percentage-w-version-2-counts)
           - [Percentage by year](#percentage-by-year)
+      - [White versus non-white w/ version 1
+        counts](#white-versus-non-white-w-version-1-counts)
+      - [White versus non-white w/ version 2
+        counts](#white-versus-non-white-w-version-2-counts)
+      - [Percentage white, asian, non-white across
+        areas](#percentage-white-asian-non-white-across-areas)
       - [Gender](#gender)
 
 # Setup
@@ -355,6 +361,122 @@ eth %>%
 
 ![](daniel_analysis_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
+## White versus non-white w/ version 1 counts
+
+``` r
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
+```
+
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+## White versus non-white w/ version 2 counts
+
+``` r
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, wt = value) %>% 
+  left_join(
+    n_applicants %>% 
+      gather(season, total_apps, `2017-18`:`2019-20`) %>% 
+      count(area, wt = total_apps) %>% 
+      mutate(
+        key = area,
+        total_apps = n
+      ) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
+```
+
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+## Percentage white, asian, non-white across areas
+
+``` r
+eth_new <-
+  eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  mutate(
+    eth_new = 
+      ifelse(
+        eth == "White", 
+        "White",
+        ifelse(
+          eth == "Japanese" | eth == "Chinese" | eth == "Korean" | eth == "Other Asian" | eth == "Vietnamese",
+          "Asian",
+          "Non-White"
+        )
+      )
+  )
+
+eth_new %>%   
+  count(eth_new, key, wt = value) %>% 
+  left_join(
+    eth_new %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  ggplot(aes(fct_reorder(eth_new, per), per)) +
+  geom_col() +
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+```
+
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
 ## Gender
 
 ``` r
@@ -373,7 +495,7 @@ gender %>%
   )
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 gender %>% 
@@ -388,4 +510,4 @@ gender %>%
   )
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->

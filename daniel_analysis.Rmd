@@ -260,6 +260,119 @@ eth %>%
 ```
 
 
+## White versus non-white w/ version 1 counts
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
+```
+
+
+## White versus non-white w/ version 2 counts
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, wt = value) %>% 
+  left_join(
+    n_applicants %>% 
+      gather(season, total_apps, `2017-18`:`2019-20`) %>% 
+      count(area, wt = total_apps) %>% 
+      mutate(
+        key = area,
+        total_apps = n
+      ) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
+```
+
+
+## Percentage white, asian, non-white across areas
+
+```{r}
+eth_new <-
+  eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  mutate(
+    eth_new = 
+      ifelse(
+        eth == "White", 
+        "White",
+        ifelse(
+          eth == "Japanese" | eth == "Chinese" | eth == "Korean" | eth == "Other Asian" | eth == "Vietnamese",
+          "Asian",
+          "Non-White"
+        )
+      )
+  )
+
+eth_new %>%   
+  count(eth_new, key, wt = value) %>% 
+  left_join(
+    eth_new %>% 
+      count(key, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = "key"
+  ) %>% 
+  mutate(
+    per = n/total_apps
+  ) %>% 
+  ggplot(aes(fct_reorder(eth_new, per), per)) +
+  geom_col() +
+  facet_grid(. ~ key) + 
+  coord_flip()  +
+  labs(
+    x = "ethnicity",
+    y = "percentage"
+  )
+```
+
+
 ## Gender
 
 ```{r}
