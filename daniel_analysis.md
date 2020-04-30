@@ -19,6 +19,8 @@ Daniel O’Leary
           - [Percentage by year](#percentage-by-year)
       - [White versus non-white w/ version 1
         counts](#white-versus-non-white-w-version-1-counts)
+      - [White versus non-white w/ version 1
+        counts](#white-versus-non-white-w-version-1-counts-1)
       - [White versus non-white w/ version 2
         counts](#white-versus-non-white-w-version-2-counts)
       - [Percentage white, asian, non-white across
@@ -396,6 +398,41 @@ eth %>%
 
 ![](daniel_analysis_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
+## White versus non-white w/ version 1 counts
+
+``` r
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, season, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, season, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = c("key", "season")
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  facet_grid(. ~ season) 
+```
+
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
 ## White versus non-white w/ version 2 counts
 
 ``` r
@@ -432,7 +469,7 @@ eth %>%
   annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ## Percentage white, asian, non-white across areas
 
@@ -475,7 +512,7 @@ eth_new %>%
   )
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## Gender
 
@@ -495,7 +532,7 @@ gender %>%
   )
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 gender %>% 
@@ -510,4 +547,4 @@ gender %>%
   )
 ```
 
-![](daniel_analysis_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+![](daniel_analysis_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->

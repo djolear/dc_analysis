@@ -293,6 +293,39 @@ eth %>%
   annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
 ```
 
+## White versus non-white w/ version 1 counts
+
+```{r}
+eth %>% 
+  gather(key, value, Affective:Social) %>% 
+  count(eth == "White", key, season, wt = value) %>% 
+  left_join(
+    eth %>% 
+      gather(key, value, Affective:Social) %>% 
+      count(key, season, wt = value) %>% 
+      mutate(total_apps = n) %>% 
+      dplyr::select(-c(n)),
+    by = c("key", "season")
+  ) %>% 
+  mutate(
+    per = n/total_apps,
+    non_white_apps = `eth == "White"`
+  ) %>%
+  filter(non_white_apps == FALSE) %>% 
+  ggplot(aes(key, per)) +
+  geom_col() +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +  
+  coord_flip()  +
+  labs(
+    x = "area",
+    y = "percentage non-white applicants"
+  ) +
+  geom_hline(yintercept = .399, color = "red") + 
+  facet_grid(. ~ season) 
+```
+
 
 ## White versus non-white w/ version 2 counts
 
