@@ -293,7 +293,7 @@ eth %>%
   annotate("text", x = 5, y = 0.2, label = "red line indicates percentage of non-whites in US", color = "red")
 ```
 
-## White versus non-white w/ version 1 counts
+## White versus non-white w/ version 1 counts by year
 
 ```{r}
 eth %>% 
