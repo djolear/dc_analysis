@@ -8,12 +8,23 @@ Daniel O’Leary
       - [Load Data](#load-data)
   - [Analysis](#analysis)
       - [Total number of apps by area](#total-number-of-apps-by-area)
-      - [Counts from ethnicity file](#counts-from-ethnicity-file)
-      - [Counts from n\_applicants file](#counts-from-n_applicants-file)
+          - [Counts from eth\_summaries](#counts-from-eth_summaries)
+          - [Counts from n\_applicants
+            file](#counts-from-n_applicants-file)
 
 # Setup
 
 ## Load Packages
+
+``` r
+if (!require("pacman")) install.packages("pacman")
+```
+
+    ## Loading required package: pacman
+
+``` r
+pacman::p_load(tidyverse)
+```
 
 ## Load Data
 
@@ -80,7 +91,7 @@ n_applicants <-
 
 ## Total number of apps by area
 
-## Counts from ethnicity file
+### Counts from eth\_summaries
 
 ``` r
 eth %>% 
@@ -112,7 +123,7 @@ eth %>%
     ## 14 Neuroscience  2019-20        104
     ## 15 Social        2019-20        267
 
-## Counts from n\_applicants file
+### Counts from n\_applicants file
 
 ``` r
 n_applicants %>% 
