@@ -12,7 +12,7 @@ output:
 ## Load Packages
 ```{r setup, include=FALSE}
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, haven, broom, lavaan, mediation, lm.beta)
+pacman::p_load(tidyverse)
 ```
 
 
@@ -48,7 +48,7 @@ n_applicants <-
 
 ## Total number of apps by area
 
-## Version 1
+## Counts from ethnicity file
 
 ```{r}
 eth %>% 
@@ -61,7 +61,7 @@ eth %>%
   arrange(season)
 ```
 
-## Version 2
+## Counts from n_applicants file
 
 ```{r}
 n_applicants %>% 
